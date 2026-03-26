@@ -1,0 +1,393 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyMkz48kAtKtW3FPwqUOkX5P",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/refalajar-hue/Teach-plan/blob/main/cleaning_01.ipynb.error\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 8,
+      "metadata": {
+        "id": "KbyQ9mMCP18k"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "import seaborn as sns\n",
+        "import matplotlib.pyplot as plt\n",
+        "# this function loads the dataset and shows the first rows\n",
+        "# this helps me see how the data looks at the beginning\n",
+        "def load_data(path):\n",
+        "    df = pd.read_csv(\"/AmesHousing.csv\")\n",
+        "    print(\"first 5 rows\")\n",
+        "    print(df.head())\n",
+        "    return df"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# here i load the file and print the first rows\n",
+        "# this helps me quickly see the columns and values\n",
+        "def load_data(path):\n",
+        "    df = pd.read_csv(\"/AmesHousing.csv\")\n",
+        "    # remove extra spaces from column names\n",
+        "    df.columns = df.columns.str.strip()\n",
+        "    print(\"first 5 rows\",df.head())\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "QwnKGHQdQFTR"
+      },
+      "execution_count": 9,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# this function prints number of rows and columns\n",
+        "# this helps me understand the size of the dataset\n",
+        "def check_shape(df):\n",
+        "    print(\"dataset shape\")\n",
+        "    print(\"rows:\", df.shape[0])\n",
+        "    print(\"columns:\", df.shape[1])\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "dSfB7AqvRLdG"
+      },
+      "execution_count": 10,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# here i use info() to check data types and missing values\n",
+        "# this helps me see if some columns have wrong types\n",
+        "def inf_types(df):\n",
+        "    print(\"data types info\",df.info())\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "ZJ8sdmOeRQPI"
+      },
+      "execution_count": 11,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# here i check numeric columns even if they already look correct\n",
+        "# sometimes datasets read numbers as text so i make sure they are numeric\n",
+        "def fix_type(df):\n",
+        "    df[\"total_rooms\"] = pd.to_numeric(df[\"total_rooms\"], errors=\"coerce\")\n",
+        "    df[\"total_bedrooms\"] = pd.to_numeric(df[\"total_bedrooms\"], errors=\"coerce\")\n",
+        "    print(\"checked numeric types for rooms columns\")\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "cZoBABv5RYiH"
+      },
+      "execution_count": 12,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# here i count missing values in every column\n",
+        "# this helps me know which columns need cleaning\n",
+        "def missing_values(df):\n",
+        "    print(\"missing values per column\")\n",
+        "    print(df.isnull().sum())\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "xDHlR2doRge8"
+      },
+      "execution_count": 13,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# here i fill missing values based on the column type\n",
+        "# lot frontage is a numeric column\n",
+        "# i use median because it is better when data has outliers because it is robust to outliers and skewed data\n",
+        "# median is more stable than mean\n",
+        "def handle_missing(df):\n",
+        "    df[\"total_bedrooms\"] = df[\"total_bedrooms\"].fillna(df[\"total_bedrooms\"].median())\n",
+        "    print(\"handled missing values in total_bedrooms\")\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "5-eWniaERkn9"
+      },
+      "execution_count": 14,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# here i check if there are duplicate rows\n",
+        "# duplicates can affect analysis so i remove them\n",
+        "def handle_duplicates(df):\n",
+        "    print(\"duplicate rows:\", df.duplicated().sum())\n",
+        "    df = df.drop_duplicates()\n",
+        "    print(\"shape after removing duplicates:\", df.shape)\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "sVZ3dsWtSXVw"
+      },
+      "execution_count": 15,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# here i check outliers in the target column saleprice\n",
+        "# i also calculate the iqr\n",
+        "\n",
+        "def handle_outliers(df):\n",
+        "    # boxplot to see outliers visually\n",
+        "    sns.boxplot(x=df[\"median_house_value\"])\n",
+        "    plt.title(\"boxplot of  median house value\")\n",
+        "    plt.show()\n",
+        "    # calculate q1 and q3\n",
+        "    q1 = df[\"median_house_value\"].quantile(0.25)\n",
+        "    q3 = df[\"median_house_value\"].quantile(0.75)\n",
+        "    # calculate iqr\n",
+        "    iqr = q3 - q1\n",
+        "    print(\"iqr value:\", iqr)\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "jYz06_oKScdm"
+      },
+      "execution_count": 16,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# final checks to confirm data looks correct\n",
+        "def final_checks(df):\n",
+        "    print(\"nullsss in target:\", df[\"median_house_value\"].isnull().sum())\n",
+        "    print(\"all target values > 0:\", (df[\"median_house_value\"] > 0).all())\n",
+        "    print(\"total columns:\", df.shape[1])\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "7eAXQI1lVvsB"
+      },
+      "execution_count": 17,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# this function runs all cleaning steps in order\n",
+        "def cleaning_pipeline(path):\n",
+        "    df = load_data(path)\n",
+        "    df = check_shape(df)\n",
+        "    df = inf_types(df)\n",
+        "    df = fix_type(df)\n",
+        "    df = missing_values(df)\n",
+        "    df = handle_missing(df)\n",
+        "    df = handle_duplicates(df)\n",
+        "    df = handle_outliers(df)\n",
+        "    df = final_checks(df)\n",
+        "    print(\"cleaning done\")\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "ukMuzOwqSviY"
+      },
+      "execution_count": 18,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "clean_df = cleaning_pipeline(\"/AmesHousing.csv\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        },
+        "id": "yxbENLfES3x9",
+        "outputId": "9ccbaec2-5f0d-4b23-88f5-7159df504ff9"
+      },
+      "execution_count": 19,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "first 5 rows    Order        PID  MS SubClass MS Zoning  Lot Frontage  Lot Area Street  \\\n",
+            "0      1  526301100           20        RL         141.0     31770   Pave   \n",
+            "1      2  526350040           20        RH          80.0     11622   Pave   \n",
+            "2      3  526351010           20        RL          81.0     14267   Pave   \n",
+            "3      4  526353030           20        RL          93.0     11160   Pave   \n",
+            "4      5  527105010           60        RL          74.0     13830   Pave   \n",
+            "\n",
+            "  Alley Lot Shape Land Contour  ... Pool Area Pool QC  Fence Misc Feature  \\\n",
+            "0   NaN       IR1          Lvl  ...         0     NaN    NaN          NaN   \n",
+            "1   NaN       Reg          Lvl  ...         0     NaN  MnPrv          NaN   \n",
+            "2   NaN       IR1          Lvl  ...         0     NaN    NaN         Gar2   \n",
+            "3   NaN       Reg          Lvl  ...         0     NaN    NaN          NaN   \n",
+            "4   NaN       IR1          Lvl  ...         0     NaN  MnPrv          NaN   \n",
+            "\n",
+            "  Misc Val Mo Sold Yr Sold Sale Type  Sale Condition  SalePrice  \n",
+            "0        0       5    2010       WD           Normal     215000  \n",
+            "1        0       6    2010       WD           Normal     105000  \n",
+            "2    12500       6    2010       WD           Normal     172000  \n",
+            "3        0       4    2010       WD           Normal     244000  \n",
+            "4        0       3    2010       WD           Normal     189900  \n",
+            "\n",
+            "[5 rows x 82 columns]\n",
+            "dataset shape\n",
+            "rows: 2930\n",
+            "columns: 82\n",
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 2930 entries, 0 to 2929\n",
+            "Data columns (total 82 columns):\n",
+            " #   Column           Non-Null Count  Dtype  \n",
+            "---  ------           --------------  -----  \n",
+            " 0   Order            2930 non-null   int64  \n",
+            " 1   PID              2930 non-null   int64  \n",
+            " 2   MS SubClass      2930 non-null   int64  \n",
+            " 3   MS Zoning        2930 non-null   object \n",
+            " 4   Lot Frontage     2440 non-null   float64\n",
+            " 5   Lot Area         2930 non-null   int64  \n",
+            " 6   Street           2930 non-null   object \n",
+            " 7   Alley            198 non-null    object \n",
+            " 8   Lot Shape        2930 non-null   object \n",
+            " 9   Land Contour     2930 non-null   object \n",
+            " 10  Utilities        2930 non-null   object \n",
+            " 11  Lot Config       2930 non-null   object \n",
+            " 12  Land Slope       2930 non-null   object \n",
+            " 13  Neighborhood     2930 non-null   object \n",
+            " 14  Condition 1      2930 non-null   object \n",
+            " 15  Condition 2      2930 non-null   object \n",
+            " 16  Bldg Type        2930 non-null   object \n",
+            " 17  House Style      2930 non-null   object \n",
+            " 18  Overall Qual     2930 non-null   int64  \n",
+            " 19  Overall Cond     2930 non-null   int64  \n",
+            " 20  Year Built       2930 non-null   int64  \n",
+            " 21  Year Remod/Add   2930 non-null   int64  \n",
+            " 22  Roof Style       2930 non-null   object \n",
+            " 23  Roof Matl        2930 non-null   object \n",
+            " 24  Exterior 1st     2930 non-null   object \n",
+            " 25  Exterior 2nd     2930 non-null   object \n",
+            " 26  Mas Vnr Type     1155 non-null   object \n",
+            " 27  Mas Vnr Area     2907 non-null   float64\n",
+            " 28  Exter Qual       2930 non-null   object \n",
+            " 29  Exter Cond       2930 non-null   object \n",
+            " 30  Foundation       2930 non-null   object \n",
+            " 31  Bsmt Qual        2850 non-null   object \n",
+            " 32  Bsmt Cond        2850 non-null   object \n",
+            " 33  Bsmt Exposure    2847 non-null   object \n",
+            " 34  BsmtFin Type 1   2850 non-null   object \n",
+            " 35  BsmtFin SF 1     2929 non-null   float64\n",
+            " 36  BsmtFin Type 2   2849 non-null   object \n",
+            " 37  BsmtFin SF 2     2929 non-null   float64\n",
+            " 38  Bsmt Unf SF      2929 non-null   float64\n",
+            " 39  Total Bsmt SF    2929 non-null   float64\n",
+            " 40  Heating          2930 non-null   object \n",
+            " 41  Heating QC       2930 non-null   object \n",
+            " 42  Central Air      2930 non-null   object \n",
+            " 43  Electrical       2929 non-null   object \n",
+            " 44  1st Flr SF       2930 non-null   int64  \n",
+            " 45  2nd Flr SF       2930 non-null   int64  \n",
+            " 46  Low Qual Fin SF  2930 non-null   int64  \n",
+            " 47  Gr Liv Area      2930 non-null   int64  \n",
+            " 48  Bsmt Full Bath   2928 non-null   float64\n",
+            " 49  Bsmt Half Bath   2928 non-null   float64\n",
+            " 50  Full Bath        2930 non-null   int64  \n",
+            " 51  Half Bath        2930 non-null   int64  \n",
+            " 52  Bedroom AbvGr    2930 non-null   int64  \n",
+            " 53  Kitchen AbvGr    2930 non-null   int64  \n",
+            " 54  Kitchen Qual     2930 non-null   object \n",
+            " 55  TotRms AbvGrd    2930 non-null   int64  \n",
+            " 56  Functional       2930 non-null   object \n",
+            " 57  Fireplaces       2930 non-null   int64  \n",
+            " 58  Fireplace Qu     1508 non-null   object \n",
+            " 59  Garage Type      2773 non-null   object \n",
+            " 60  Garage Yr Blt    2771 non-null   float64\n",
+            " 61  Garage Finish    2771 non-null   object \n",
+            " 62  Garage Cars      2929 non-null   float64\n",
+            " 63  Garage Area      2929 non-null   float64\n",
+            " 64  Garage Qual      2771 non-null   object \n",
+            " 65  Garage Cond      2771 non-null   object \n",
+            " 66  Paved Drive      2930 non-null   object \n",
+            " 67  Wood Deck SF     2930 non-null   int64  \n",
+            " 68  Open Porch SF    2930 non-null   int64  \n",
+            " 69  Enclosed Porch   2930 non-null   int64  \n",
+            " 70  3Ssn Porch       2930 non-null   int64  \n",
+            " 71  Screen Porch     2930 non-null   int64  \n",
+            " 72  Pool Area        2930 non-null   int64  \n",
+            " 73  Pool QC          13 non-null     object \n",
+            " 74  Fence            572 non-null    object \n",
+            " 75  Misc Feature     106 non-null    object \n",
+            " 76  Misc Val         2930 non-null   int64  \n",
+            " 77  Mo Sold          2930 non-null   int64  \n",
+            " 78  Yr Sold          2930 non-null   int64  \n",
+            " 79  Sale Type        2930 non-null   object \n",
+            " 80  Sale Condition   2930 non-null   object \n",
+            " 81  SalePrice        2930 non-null   int64  \n",
+            "dtypes: float64(11), int64(28), object(43)\n",
+            "memory usage: 1.8+ MB\n",
+            "data types info None\n"
+          ]
+        },
+        {
+          "output_type": "error",
+          "ename": "KeyError",
+          "evalue": "'total_rooms'",
+          "traceback": [
+            "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+            "\u001b[0;31mKeyError\u001b[0m                                  Traceback (most recent call last)",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/core/indexes/base.py\u001b[0m in \u001b[0;36mget_loc\u001b[0;34m(self, key)\u001b[0m\n\u001b[1;32m   3804\u001b[0m         \u001b[0;32mtry\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 3805\u001b[0;31m             \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_engine\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mget_loc\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mcasted_key\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   3806\u001b[0m         \u001b[0;32mexcept\u001b[0m \u001b[0mKeyError\u001b[0m \u001b[0;32mas\u001b[0m \u001b[0merr\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32mindex.pyx\u001b[0m in \u001b[0;36mpandas._libs.index.IndexEngine.get_loc\u001b[0;34m()\u001b[0m\n",
+            "\u001b[0;32mindex.pyx\u001b[0m in \u001b[0;36mpandas._libs.index.IndexEngine.get_loc\u001b[0;34m()\u001b[0m\n",
+            "\u001b[0;32mpandas/_libs/hashtable_class_helper.pxi\u001b[0m in \u001b[0;36mpandas._libs.hashtable.PyObjectHashTable.get_item\u001b[0;34m()\u001b[0m\n",
+            "\u001b[0;32mpandas/_libs/hashtable_class_helper.pxi\u001b[0m in \u001b[0;36mpandas._libs.hashtable.PyObjectHashTable.get_item\u001b[0;34m()\u001b[0m\n",
+            "\u001b[0;31mKeyError\u001b[0m: 'total_rooms'",
+            "\nThe above exception was the direct cause of the following exception:\n",
+            "\u001b[0;31mKeyError\u001b[0m                                  Traceback (most recent call last)",
+            "\u001b[0;32m/tmp/ipykernel_6574/2721221462.py\u001b[0m in \u001b[0;36m<cell line: 0>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mclean_df\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mcleaning_pipeline\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m\"/AmesHousing.csv\"\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+            "\u001b[0;32m/tmp/ipykernel_6574/1591176371.py\u001b[0m in \u001b[0;36mcleaning_pipeline\u001b[0;34m(path)\u001b[0m\n\u001b[1;32m      4\u001b[0m     \u001b[0mdf\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mcheck_shape\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      5\u001b[0m     \u001b[0mdf\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0minf_types\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 6\u001b[0;31m     \u001b[0mdf\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mfix_type\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      7\u001b[0m     \u001b[0mdf\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mmissing_values\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      8\u001b[0m     \u001b[0mdf\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mhandle_missing\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/tmp/ipykernel_6574/2577723517.py\u001b[0m in \u001b[0;36mfix_type\u001b[0;34m(df)\u001b[0m\n\u001b[1;32m      2\u001b[0m \u001b[0;31m# sometimes datasets read numbers as text so i make sure they are numeric\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      3\u001b[0m \u001b[0;32mdef\u001b[0m \u001b[0mfix_type\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 4\u001b[0;31m     \u001b[0mdf\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m\"total_rooms\"\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mpd\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mto_numeric\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m\"total_rooms\"\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0merrors\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;34m\"coerce\"\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      5\u001b[0m     \u001b[0mdf\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m\"total_bedrooms\"\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mpd\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mto_numeric\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m\"total_bedrooms\"\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0merrors\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;34m\"coerce\"\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      6\u001b[0m     \u001b[0mprint\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m\"checked numeric types for rooms columns\"\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/core/frame.py\u001b[0m in \u001b[0;36m__getitem__\u001b[0;34m(self, key)\u001b[0m\n\u001b[1;32m   4100\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mcolumns\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mnlevels\u001b[0m \u001b[0;34m>\u001b[0m \u001b[0;36m1\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   4101\u001b[0m                 \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_getitem_multilevel\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mkey\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 4102\u001b[0;31m             \u001b[0mindexer\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mcolumns\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mget_loc\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mkey\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   4103\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0mis_integer\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mindexer\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   4104\u001b[0m                 \u001b[0mindexer\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;34m[\u001b[0m\u001b[0mindexer\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/core/indexes/base.py\u001b[0m in \u001b[0;36mget_loc\u001b[0;34m(self, key)\u001b[0m\n\u001b[1;32m   3810\u001b[0m             ):\n\u001b[1;32m   3811\u001b[0m                 \u001b[0;32mraise\u001b[0m \u001b[0mInvalidIndexError\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mkey\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 3812\u001b[0;31m             \u001b[0;32mraise\u001b[0m \u001b[0mKeyError\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mkey\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0merr\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   3813\u001b[0m         \u001b[0;32mexcept\u001b[0m \u001b[0mTypeError\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   3814\u001b[0m             \u001b[0;31m# If we have a listlike key, _check_indexing_error will raise\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;31mKeyError\u001b[0m: 'total_rooms'"
+          ]
+        }
+      ]
+    }
+  ]
+}
